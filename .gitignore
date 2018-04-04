@@ -3,3 +3,6 @@
 *DS_Store*
 __pycache__
 .ipynb_checkpoints
+*numberbatch-en.txt*
+glove*
+joint_sentences*
