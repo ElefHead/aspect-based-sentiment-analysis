@@ -28,16 +28,16 @@ class MaxClassClassifier:
 
 def main():
     # load data
-    joint_data = pd.read_csv('./data/joint_data.csv')
-    elec_data = pd.read_csv('./data/elec_data_clean.csv')
-    food_data = pd.read_csv('./data/food_data_clean.csv')
+    joint_data = pd.read_csv('./data/ml_joint_data.csv')
+    elec_data = pd.read_csv('./data/ml_elec_data.csv')
+    food_data = pd.read_csv('./data/ml_food_data.csv')
 
     # get required data and labels
-    x_joint = joint_data['filtered_text'].values
+    x_joint = joint_data['text'].values
     y_joint = np.array(joint_data['class'].values, dtype=np.float32)
-    x_elec = elec_data['filtered_text'].values
+    x_elec = elec_data['text'].values
     y_elec = np.array(elec_data['class'].values, dtype=np.float32)
-    x_food = food_data['filtered_text'].values
+    x_food = food_data['text'].values
     y_food = np.array(food_data['class'].values, dtype=np.float32)
 
     # define accuracy arrays

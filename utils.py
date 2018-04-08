@@ -1,6 +1,6 @@
 from spacy.tokenizer import Tokenizer
 from spacy import load
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix
 import numpy as np
 
 number_batch = './data/numberbatch-en.txt'
@@ -11,7 +11,21 @@ tokenizer = Tokenizer(nlp.vocab)
 
 # Remove Stopwords
 def remove_stopwords(sentence) :
-    return " ".join([str(token) for token in tokenizer(sentence.replace('[comma]', '').replace(".","").lower()) if not token.is_stop and not token.is_punct and not token.is_digit and token.is_alpha])
+    return " ".join([str(token) for token in tokenizer(sentence.replace('[comma]', '').replace(".","").lower())
+                     if not token.is_stop and not token.is_punct and not token.is_digit and token.is_alpha])
+
+
+# split and get left side of the sentence
+def split_left(text_splitpoint) :
+    sentence, split_point = text_splitpoint
+    return sentence.split(split_point)[0]
+
+
+# split and get right side of the sentence
+def split_right(text_splitpoint):
+    sentence, split_point = text_splitpoint
+    split = sentence.split(split_point)
+    return split[1] if len(split)>1 else " "
 
 
 class Sensitivity:

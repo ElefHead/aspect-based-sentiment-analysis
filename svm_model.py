@@ -2,7 +2,6 @@ from sklearn.svm import SVC
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import GridSearchCV, train_test_split, StratifiedKFold
 from nltk import word_tokenize
-from spacy import load
 import numpy as np
 import pandas as pd
 from utils import accuracy, precision, recall, f1
@@ -11,7 +10,6 @@ from os import listdir, path
 
 np.random.seed(1)
 
-nlp = load("en")
 
 kfolds = StratifiedKFold(n_splits=10, shuffle=True, random_state=1)
 
@@ -89,15 +87,15 @@ def vectorized_svm(x_joint, y_joint, x_elec, y_elec, x_food, y_food, checktrain=
 
 
 def main():
-    joint_data = pd.read_csv('./data/joint_data.csv')
-    elec_data = pd.read_csv('./data/elec_data_clean.csv')
-    food_data = pd.read_csv('./data/food_data_clean.csv')
+    joint_data = pd.read_csv('./data/ml_joint_data.csv')
+    elec_data = pd.read_csv('./data/ml_elec_data.csv')
+    food_data = pd.read_csv('./data/ml_food_data.csv')
 
-    x_joint = joint_data['filtered_text'].values.astype('U')
+    x_joint = joint_data['text'].values.astype('U')
     y_joint = joint_data['class'].values.astype(np.float32)
-    x_elec = elec_data['filtered_text'].values.astype('U')
+    x_elec = elec_data['text'].values.astype('U')
     y_elec = elec_data['class'].values.astype(np.float32)
-    x_food = food_data['filtered_text'].values.astype('U')
+    x_food = food_data['text'].values.astype('U')
     y_food = food_data['class'].values.astype(np.float32)
 
     vectorized_svm(x_joint, y_joint, x_elec, y_elec, x_food, y_food, ngram_range=(1,1), vector_type="count")

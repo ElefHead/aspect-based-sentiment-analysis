@@ -2,10 +2,9 @@
 .DS_Store
 *DS_Store*
 __pycache__
-.ipynb_checkpoints
 *numberbatch-en.txt*
 glove*
 joint_sentences*
 data/
-*.ipynb
+*.ipynb*
 ml_models*
