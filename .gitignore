@@ -6,3 +6,5 @@ __pycache__
 *numberbatch-en.txt*
 glove*
 joint_sentences*
+data/
+*.ipynb
