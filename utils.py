@@ -2,6 +2,7 @@ from spacy.tokenizer import Tokenizer
 from spacy import load
 from sklearn.metrics import accuracy_score, confusion_matrix
 import numpy as np
+import re
 
 number_batch = './data/numberbatch-en.txt'
 
@@ -13,6 +14,17 @@ tokenizer = Tokenizer(nlp.vocab)
 def remove_stopwords(sentence) :
     return " ".join([str(token) for token in tokenizer(sentence.replace('[comma]', '').replace(".","").lower())
                      if not token.is_stop and not token.is_punct and not token.is_digit and token.is_alpha])
+
+
+def remove_aspect(text_aspect) :
+    text, aspect = text_aspect
+    print(text, aspect)
+    pattern = '\s*'+aspect.replace('(', '\(').replace(')', '\)')+'\s*'
+    return re.sub(pattern, ' ', text)
+
+
+def replace_comma(text) :
+    return text.replace('[comma]',',')
 
 
 # split and get left side of the sentence
@@ -144,3 +156,16 @@ def f1(actuals, predictions, labels=(-1, 0, 1)):
     if sensitivity.is_flushed() or not np.array_equal(sensitivity.y_train, actuals):
         sensitivity.set_matrix(actuals, predictions, labels)
     return sensitivity.get_set_f1()
+
+
+def loadGloveModel():
+    print("Loading Glove Model")
+    f = open(number_batch,'r')
+    model = {}
+    for line in f:
+        splitLine = line.split()
+        word = splitLine[0]
+        embedding = np.array([float(val) for val in splitLine[1:]])
+        model[word] = embedding
+    print("Done.",len(model)," words loaded!")
+    return model
