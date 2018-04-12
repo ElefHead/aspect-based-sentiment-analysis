@@ -1,6 +1,6 @@
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.model_selection import GridSearchCV, train_test_split, StratifiedKFold
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from nltk import word_tokenize
 import numpy as np
 import pandas as pd

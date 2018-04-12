@@ -28,7 +28,7 @@ class MaxClassClassifier:
 
 def main():
     # load data
-    joint_data = pd.read_csv('./data/ml_joint_data.csv')
+    joint_data = pd.read_csv('./data/joint_data_train.csv')
     elec_data = pd.read_csv('./data/ml_elec_data.csv')
     food_data = pd.read_csv('./data/ml_food_data.csv')
 

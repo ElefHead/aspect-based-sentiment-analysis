@@ -1,6 +1,6 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.model_selection import GridSearchCV, train_test_split, StratifiedKFold
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from nltk import word_tokenize
 import numpy as np
 import pandas as pd
@@ -38,6 +38,8 @@ def train(x_train, y_train, check_trained=True, ngram_range=(1,1), vector_type="
                             )
     grid_cls.fit(x_train, y_train)
 
+    print(grid_cls.best_params_)
+
     with open(path.join('./ml_models/',fname), 'wb') as fid:
         cPickle.dump(grid_cls.best_estimator_, fid)
 
@@ -54,6 +56,7 @@ def vectorized_rf(x_train, y_train, x_test, y_test, x_elec, y_elec, x_food, y_fo
     vectorized_x_train = vectorizer.fit_transform(x_train)
     vectorized_x_test = vectorizer.transform(x_test)
     model = train(vectorized_x_train, y_train, checktrain, ngram_range, vector_type=vector_type)
+    # print(model.parameters_)
     pred_x_train = predict(model, vectorized_x_train)
     pred_x_test = predict(model, vectorized_x_test)
     pred_elec = predict(model, vectorizer.transform(x_elec))
