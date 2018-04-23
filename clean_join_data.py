@@ -1,6 +1,6 @@
 import pandas as pd
 from os import path
-from utils import remove_stopwords, split_left, split_right, remove_aspect
+from utils import remove_stopwords, split_left, split_right, remove_aspect, point_aspect
 from sklearn.model_selection import train_test_split
 import numpy as np
 
@@ -17,6 +17,10 @@ elec_data = elec_data.drop('example_id', axis=1)
 food_data.rename(columns={' text':'text', ' aspect_term':'aspect_term', ' term_location': 'term_location',
                  ' class': 'class'}, inplace=True)
 food_data = food_data.drop('example_id', axis=1)
+
+joint_data = pd.concat([elec_data, food_data], ignore_index=True)
+joint_data['token_text'] = joint_data[['text', 'aspect_term']].apply(point_aspect, axis=1)
+joint_data.to_csv('./data/joint_data.csv')
 
 # Split text
 elec_data['left_text'] = elec_data[['text', 'aspect_term']].apply(split_left, axis=1)
@@ -58,6 +62,10 @@ joint_data_train = pd.concat([elec_data_train, food_data_train], ignore_index=Tr
 joint_data_test = pd.concat([elec_data_test, food_data_test], ignore_index=True)
 ml_joint_data_train = pd.concat([ml_elec_data_train, ml_food_data_train], ignore_index=True)
 ml_joint_data_test = pd.concat([ml_elec_data_test, ml_elec_data_test], ignore_index=True)
+
+# joint_data = pd.concat([elec_data, food_data], ignore_index=True)
+
+
 
 joint_data_train.to_csv('./data/joint_data_train.csv')
 joint_data_test.to_csv('./data/joint_data_test.csv')
