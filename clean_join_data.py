@@ -18,9 +18,17 @@ food_data.rename(columns={' text':'text', ' aspect_term':'aspect_term', ' term_l
                  ' class': 'class'}, inplace=True)
 food_data = food_data.drop('example_id', axis=1)
 
+dl_elec_data = elec_data[['aspect_term', 'class']].copy()
+dl_food_data = food_data[['aspect_term', 'class']].copy()
+
 joint_data = pd.concat([elec_data, food_data], ignore_index=True)
 joint_data['token_text'] = joint_data[['text', 'aspect_term']].apply(point_aspect, axis=1)
+dl_elec_data['token_text'] = elec_data[['text', 'aspect_term']].apply(point_aspect, axis=1)
+dl_food_data['token_text'] = food_data[['text', 'aspect_term']].apply(point_aspect, axis=1)
+
 joint_data.to_csv('./data/joint_data.csv')
+dl_elec_data.to_csv('./data/dl_elec_data.csv')
+dl_food_data.to_csv('./data/dl_food_data.csv')
 
 # Split text
 elec_data['left_text'] = elec_data[['text', 'aspect_term']].apply(split_left, axis=1)

@@ -1,6 +1,6 @@
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from nltk import word_tokenize
 import numpy as np
 import pandas as pd
@@ -18,8 +18,8 @@ def tokenize(text):
     return word_tokenize(text)
 
 
-def train(x_train, y_train, check_trained=True, ngram_range=(1,1), vector_type="count"):
-    fname = 'nb_'+vector_type+"_vectorized_model_"+"_".join([str(i) for i in ngram_range])+".pkl"
+def train(x_train, y_train, check_trained=True, ngram_range=(1,1), vector_type="count", dataset="default"):
+    fname = dataset+'_nb_'+vector_type+"_vectorized_model_"+"_".join([str(i) for i in ngram_range])+".pkl"
     if check_trained :
         for file in listdir('./ml_models/'):
             if file == fname:
@@ -47,68 +47,43 @@ def predict(model, x_train):
     return model.predict(x_train)
 
 
-def vectorized_nb(x_train, y_train, x_test, y_test, x_elec, y_elec, x_food, y_food, checktrain=True, ngram_range=(1, 1), vector_type="count"):
+def vectorized_nb(x_train, y_train, x_test, y_test, checktrain=True, ngram_range=(1, 1), vector_type="count", dataset="default"):
     vectorizer = CountVectorizer(tokenizer=tokenize, ngram_range=ngram_range) if vector_type=="count" \
         else TfidfVectorizer(tokenizer=tokenize, ngram_range=ngram_range)
     vectorized_x_train = vectorizer.fit_transform(x_train)
     vectorized_x_test = vectorizer.transform(x_test)
-    model = train(vectorized_x_train, y_train, checktrain, ngram_range, vector_type=vector_type)
+    model = train(vectorized_x_train, y_train, checktrain, ngram_range, vector_type=vector_type, dataset=dataset)
     pred_x_train = predict(model, vectorized_x_train)
     pred_x_test = predict(model, vectorized_x_test)
-    pred_elec = predict(model, vectorizer.transform(x_elec))
-    pred_food = predict(model, vectorizer.transform(x_food))
 
     precision_test = precision(y_test, pred_x_test)
     recall_test = recall(y_test, pred_x_test)
     f1_test = f1(y_test, pred_x_test)
 
-    print("Accuracy training accuracy (" + vector_type, " vectorized joint data) =", accuracy(y_train, pred_x_train))
-    print("Accuracy testing accuracy (" + vector_type, "vectorized joint data) =", accuracy(y_test, pred_x_test), "\n")
+    print("Accuracy training accuracy (" + dataset, vector_type, " vectorized joint data) =", accuracy(y_train, pred_x_train))
+    print("Accuracy testing accuracy (" + dataset, vector_type, "vectorized joint data) =", accuracy(y_test, pred_x_test), "\n")
 
-    print("Precision (" + vector_type + " vectorized test data) =", precision_test)
-    print("Recall (" + vector_type + " test data) =", recall_test)
-    print("F1 (" + vector_type + " test data) =", f1_test, "\n")
-
-    print("Accuracy electronics data ("+vector_type, "vectorized) =", accuracy(y_elec, pred_elec))
-    print("Accuracy food data (" + vector_type, "vectorized) =", accuracy(y_food, pred_food),"\n")
-
-    # Set confusion matrix for elec data and then compute precision, recall and f1_score
-    precision_elec = precision(y_elec, pred_elec)
-    recall_elec = recall(y_elec, pred_elec)
-    f1_elec = f1(y_elec, pred_elec)
-
-    # Set confusion matrix for food data and then compute precision, recall and f1_score
-    precision_food = precision(y_food, pred_food)
-    recall_food = recall(y_food, pred_food)
-    f1_food = f1(y_food, pred_food)
-
-    print("Precision ("+vector_type+" vectorized electricity data) =", precision_elec)
-    print("Recall ("+vector_type+" electricity data) =", recall_elec)
-    print("F1 ("+vector_type+" electricity data) =", f1_elec, "\n")
-
-    print("Precision ("+vector_type+" food data) =", precision_food)
-    print("Recall ("+vector_type+" food data) =", recall_food)
-    print("F1 ("+vector_type+" food data) =", f1_food,"\n\n")
+    print("Precision (" + dataset, vector_type + " vectorized test data) =", precision_test)
+    print("Recall (" + dataset, vector_type + " test data) =", recall_test)
+    print("F1 (" + dataset, vector_type + " test data) =", f1_test, "\n")
 
 
 def main():
-    joint_data_train = pd.read_csv('./data/ml_joint_data_train.csv')
-    joint_data_test = pd.read_csv('./data/ml_joint_data_test.csv')
+
     elec_data = pd.read_csv('./data/ml_elec_data.csv')
     food_data = pd.read_csv('./data/ml_food_data.csv')
 
-    x_train = joint_data_train['noaspect_text'].values.astype('U')
-    y_train = joint_data_train['class'].values.astype(np.float32)
-    x_test = joint_data_test['noaspect_text'].values.astype('U')
-    y_test = joint_data_test['class'].values.astype(np.float32)
-    x_elec = elec_data['noaspect_text'].values.astype('U')
-    y_elec = elec_data['class'].values.astype(np.float32)
-    x_food = food_data['noaspect_text'].values.astype('U')
-    y_food = food_data['class'].values.astype(np.float32)
+    x_electrain, x_electest, y_electrain, y_electest = train_test_split(elec_data['noaspect_text'], elec_data['class'], shuffle=True, stratify=elec_data['class'])
 
-    vectorized_nb(x_train, y_train, x_test, y_test, x_elec, y_elec, x_food, y_food, ngram_range=(1,1), vector_type="count")
-    vectorized_nb(x_train, y_train, x_test, y_test, x_elec, y_elec, x_food, y_food, ngram_range=(1,1), vector_type="tfidf")
+    vectorized_nb(x_electrain.values.astype('U'), y_electrain.values.astype(np.float32), x_electest.values.astype('U'), y_electest.values.astype(np.float32), ngram_range=(1,1), vector_type="count", dataset="elec")
+    vectorized_nb(x_electrain.values.astype('U'), y_electrain.values.astype(np.float32), x_electest.values.astype('U'), y_electest.values.astype(np.float32), ngram_range=(1,1), vector_type="tfidf", dataset="elec")
 
+    x_foodtrain, x_foodtest, y_foodtrain, y_foodtest = train_test_split(food_data['noaspect_text'], food_data['class'], shuffle=True, stratify=food_data['class'])
+
+    vectorized_nb(x_foodtrain.values.astype('U'), y_foodtrain.values.astype(np.float32), x_foodtest.values.astype('U'),
+                  y_foodtest.values.astype(np.float32), ngram_range=(1, 1), vector_type="count", dataset="food")
+    vectorized_nb(x_foodtrain.values.astype('U'), y_foodtrain.values.astype(np.float32), x_foodtest.values.astype('U'),
+                  y_foodtest.values.astype(np.float32), ngram_range=(1, 1), vector_type="tfidf", dataset="food")
 
 if __name__ == '__main__':
     main()

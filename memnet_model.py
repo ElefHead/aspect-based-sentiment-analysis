@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-
+from utils import precision, recall, f1
 
 class MemN2N(object):
     def __init__(self, config, sess):
@@ -102,7 +102,7 @@ class MemN2N(object):
         self.loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.z, labels=self.target)
 
         self.lr = tf.Variable(self.current_lr)
-        self.opt = tf.train.AdagradOptimizer(self.lr)
+        self.opt = tf.train.AdamOptimizer(learning_rate=self.lr)
 
         params = [self.A, self.C, self.C_B, self.W, self.BL_W, self.BL_B]
 
@@ -172,10 +172,12 @@ class MemN2N(object):
             cost += np.sum(loss)
 
         if self.show: bar.finish()
-        _, train_acc = self.test(data)
-        return cost/N/self.batch_size, train_acc
+        _, train_acc, train_prec, train_rec, train_f1 = self.test(data)
+        return cost/N/self.batch_size, train_acc, train_prec, train_rec, train_f1
 
     def test(self, data):
+        preds = []
+        actuals = []
         source_data, source_loc_data, target_data, target_label = data
         N = int(np.ceil(len(source_data) / self.batch_size))
         cost = 0
@@ -219,12 +221,16 @@ class MemN2N(object):
                                                                             self.target: target,
                                                                             self.context: context,
                                                                             self.mask: mask})
-
             for b in range(self.batch_size):
+                preds.append(predictions[b])
+                actuals.append(raw_labels[b])
                 if raw_labels[b] == predictions[b]:
                     acc = acc + 1
 
-        return cost, acc/float(len(source_data))
+        prec = precision(actuals, preds, labels=[0, 1, 2])
+        rec = recall(actuals, preds, labels=[0, 1, 2])
+        f = f1(actuals, preds, labels=[0, 1, 2])
+        return cost, acc/float(len(source_data)), prec, rec, f
 
     def run(self, train_data, test_data):
         print('training...')
@@ -233,7 +239,13 @@ class MemN2N(object):
 
         for idx in range(self.nepoch):
             print('epoch '+str(idx)+'...')
-            train_loss, train_acc = self.train(train_data)
-            test_loss, test_acc = self.test(test_data)
-            print('train-loss=%.2f;train-acc=%.2f;test-acc=%.2f;' % (train_loss, train_acc, test_acc))
+            train_loss, train_acc, train_prec, train_rec, train_f1 = self.train(train_data)
+            test_loss, test_acc, test_prec, test_rec, test_f1 = self.test(test_data)
+            print('train-loss=%f;train-acc=%f;test-acc=%f;' % (train_loss, train_acc, test_acc))
+            print("Train Precision:", train_prec, end="; ")
+            print("Train Recall:", train_rec, end="; ")
+            print("Train F1:", train_f1)
+            print("Test Precision:", test_prec, end="; ")
+            print("Test Recall:", test_rec, end="; ")
+            print("Test F1:", test_f1)
             self.log_loss.append([train_loss, test_loss])

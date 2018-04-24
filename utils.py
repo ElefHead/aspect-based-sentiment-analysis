@@ -47,7 +47,7 @@ def point_aspect(text_splitpint):
 
 # From here on
 # data reading and what not
-def get_dataset_resources(data_file_name, sent_word2idx, target_word2idx, word_set, max_sent_len):
+def get_dataset_resources(df, sent_word2idx, target_word2idx, word_set, max_sent_len):
     ''' updates word2idx and word_set '''
     if len(sent_word2idx) == 0:
         sent_word2idx["<pad>"] = 0
@@ -62,8 +62,9 @@ def get_dataset_resources(data_file_name, sent_word2idx, target_word2idx, word_s
 
     # with open(data_file_name, 'r') as data_file:
     # lines = data_file.read().split('\n')
-    df = pd.read_csv(data_file_name)
-    for line_no in range(df.shape[0]):
+    # df = pd.read_csv(data_file_name)
+    idx = list(df.T)
+    for line_no in idx:
         sentence = df['token_text'][line_no].replace("[comma]","")
         target = df['aspect_term'][line_no]
 
@@ -113,7 +114,7 @@ def get_embedding_matrix(embeddings, sent_word2idx,  target_word2idx, edim):
     return word_embed_matrix, target_embed_matrix
 
 
-def get_dataset(data_file_name, sent_word2idx, target_word2idx, embeddings):
+def get_dataset(df, sent_word2idx, target_word2idx, embeddings):
     ''' returns the dataset'''
     sentence_list = []
     location_list = []
@@ -123,8 +124,9 @@ def get_dataset(data_file_name, sent_word2idx, target_word2idx, embeddings):
 
     # with open(data_file_name, 'r') as data_file:
         # lines = data_file.read().split('\n')
-    df = pd.read_csv(data_file_name)
-    for line_no in range(df.shape[0]):
+    # df = pd.read_csv(data_file_name)
+    idx = list(df.T)
+    for line_no in idx:
         sentence = df['token_text'][line_no].lower().replace("[comma]","")
         # print(sentence)
         target = df['aspect_term'][line_no].lower()
