@@ -8,8 +8,17 @@ data_path = "./data"
 electronics_data_file = "data 1_train.csv"
 food_data_file = "data 2_train.csv"
 
+laptop_test_file = "Data-1_test.csv"
+food_test_file = "Data-2_test.csv"
+
 elec_data = pd.read_csv(path.join(data_path, electronics_data_file))
 food_data = pd.read_csv(path.join(data_path, food_data_file))
+
+test_elec_data = pd.read_csv(path.join(data_path, laptop_test_file))
+test_food_data = pd.read_csv(path.join(data_path, food_test_file))
+
+test_elec_data.rename(columns={' text':'text', ' aspect_term':'aspect_term', ' term_location': 'term_location'}, inplace=True)
+test_food_data.rename(columns={' text':'text', ' aspect_term':'aspect_term', ' term_location': 'term_location'}, inplace=True)
 
 elec_data.rename(columns={' text':'text', ' aspect_term':'aspect_term', ' term_location': 'term_location',
                  ' class': 'class'}, inplace=True)
@@ -43,6 +52,11 @@ ml_food_data['noaspect_text'] = food_data[['text', 'aspect_term']].apply(remove_
 ml_elec_data['noaspect_text'] = elec_data[['text', 'aspect_term']].apply(remove_aspect, axis=1)
 ml_elec_data['noaspect_text'] = ml_elec_data['noaspect_text'].apply(remove_stopwords)
 ml_food_data['noaspect_text'] = ml_food_data['noaspect_text'].apply(remove_stopwords)
+
+test_elec_data['noaspect_text'] = test_elec_data[['text', 'aspect_term']].apply(remove_aspect, axis=1)
+test_food_data['noaspect_text'] = test_food_data[['text', 'aspect_term']].apply(remove_aspect, axis=1)
+test_food_data['noaspect_text'] = test_food_data['noaspect_text'].apply(remove_stopwords)
+test_elec_data['noaspect_text'] = test_elec_data['noaspect_text'].apply(remove_stopwords)
 
 ml_elec_data['left_text'] = elec_data['left_text'].apply(remove_stopwords)
 ml_elec_data['right_text'] = elec_data['right_text'].apply(remove_stopwords)
@@ -86,3 +100,6 @@ ml_joint_data_test.to_csv('./data/ml_joint_data_test.csv')
 
 ml_elec_data.to_csv('./data/ml_elec_data.csv')
 ml_food_data.to_csv('./data/ml_food_data.csv')
+
+test_elec_data.to_csv('./data/ml_test_elec.csv')
+test_food_data.to_csv('./data/ml_test_food.csv')

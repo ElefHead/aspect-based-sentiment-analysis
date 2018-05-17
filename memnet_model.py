@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from utils import precision, recall, f1
+from os import listdir
 
 class MemN2N(object):
     def __init__(self, config, sess):
@@ -124,54 +125,57 @@ class MemN2N(object):
         source_data, source_loc_data, target_data, target_label = data
         N = int(np.ceil(len(source_data) / self.batch_size))
         cost = 0
+        if 'dl_elec.ckpt.meta' in listdir('./dl_model/'):
+            restorer = tf.train.Saver()
+            restorer.restore(self.sess, './dl_model/dl_elec.ckpt')
+        else:
+            x = np.ndarray([self.batch_size, 1], dtype=np.int32)
+            time = np.ndarray([self.batch_size, self.mem_size], dtype=np.int32)
+            target = np.zeros([self.batch_size], dtype=np.int32)
+            context = np.ndarray([self.batch_size, self.mem_size], dtype=np.int32)
+            mask = np.ndarray([self.batch_size, self.mem_size])
 
-        x = np.ndarray([self.batch_size, 1], dtype=np.int32)
-        time = np.ndarray([self.batch_size, self.mem_size], dtype=np.int32)
-        target = np.zeros([self.batch_size], dtype=np.int32)
-        context = np.ndarray([self.batch_size, self.mem_size], dtype=np.int32)
-        mask = np.ndarray([self.batch_size, self.mem_size])
+            if self.show:
+                from utils import ProgressBar
+                bar = ProgressBar('Train', max=N)
 
-        if self.show:
-            from utils import ProgressBar
-            bar = ProgressBar('Train', max=N)
+            rand_idx, cur = np.random.permutation(len(source_data)), 0
+            for idx in range(N):
+                if self.show: bar.next()
 
-        rand_idx, cur = np.random.permutation(len(source_data)), 0
-        for idx in range(N):
-            if self.show: bar.next()
-
-            context.fill(self.pad_idx)
-            time.fill(self.mem_size)
-            target.fill(0)
-            mask.fill(-1.0*np.inf)
-
-
-            for b in range(self.batch_size):
-                m = rand_idx[cur]
-                x[b][0] = target_data[m]
-                target[b] = target_label[m]
-                time[b,:len(source_loc_data[m])] = source_loc_data[m]
-                context[b,:len(source_data[m])] = source_data[m]
-                mask[b,:len(source_data[m])].fill(0)
-                cur = cur + 1
-
-            z, a, loss, self.step = self.sess.run([ self.z, self.optim,
-                                                    self.loss,
-                                                    self.global_step],
-                                                  feed_dict={
-                                                      self.input: x,
-                                                      self.time: time,
-                                                      self.target: target,
-                                                      self.context: context,
-                                                      self.mask: mask})
+                context.fill(self.pad_idx)
+                time.fill(self.mem_size)
+                target.fill(0)
+                mask.fill(-1.0*np.inf)
 
 
+                for b in range(self.batch_size):
+                    m = rand_idx[cur]
+                    x[b][0] = target_data[m]
+                    target[b] = target_label[m]
+                    time[b,:len(source_loc_data[m])] = source_loc_data[m]
+                    context[b,:len(source_data[m])] = source_data[m]
+                    mask[b,:len(source_data[m])].fill(0)
+                    cur = cur + 1
 
-            if idx%500 == 0:
-                print("loss - ", loss)
+                z, a, loss, self.step = self.sess.run([ self.z, self.optim,
+                                                        self.loss,
+                                                        self.global_step],
+                                                      feed_dict={
+                                                          self.input: x,
+                                                          self.time: time,
+                                                          self.target: target,
+                                                          self.context: context,
+                                                          self.mask: mask})
 
-            cost += np.sum(loss)
 
-        if self.show: bar.finish()
+
+                if idx%500 == 0:
+                    print("loss - ", loss)
+
+                cost += np.sum(loss)
+
+            if self.show: bar.finish()
         _, train_acc, train_prec, train_rec, train_f1 = self.test(data)
         return cost/N/self.batch_size, train_acc, train_prec, train_rec, train_f1
 
@@ -249,3 +253,8 @@ class MemN2N(object):
             print("Test Recall:", test_rec, end="; ")
             print("Test F1:", test_f1)
             self.log_loss.append([train_loss, test_loss])
+
+        # if 'dl_elec.ckpt.meta' not in listdir('./dl_model'):
+        saver = tf.train.Saver()
+        saver_path = saver.save(self.sess, "./dl_model/dl_elec.ckpt")
+        print("Model saved at :", saver_path)

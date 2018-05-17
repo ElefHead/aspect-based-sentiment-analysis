@@ -68,10 +68,17 @@ def vectorized_svm(x_train, y_train, x_test, y_test, checktrain=True, ngram_rang
     print("Recall (" + dataset, vector_type + " test data) =", recall_test)
     print("F1 (" + dataset, vector_type + " test data) =", f1_test, "\n")
 
+    return vectorizer, model
+
 
 def main():
     elec_data = pd.read_csv('./data/ml_elec_data.csv')
     food_data = pd.read_csv('./data/ml_food_data.csv')
+    elec_test = pd.read_csv('./data/ml_test_elec.csv')
+    food_test = pd.read_csv('./data/ml_test_food.csv')
+
+    print(elec_test.shape)
+    print(food_test.shape)
 
     x_electrain, x_electest, y_electrain, y_electest = train_test_split(elec_data['noaspect_text'], elec_data['class'],
                                                                         shuffle=True, stratify=elec_data['class'])
@@ -84,10 +91,32 @@ def main():
     x_foodtrain, x_foodtest, y_foodtrain, y_foodtest = train_test_split(food_data['noaspect_text'], food_data['class'],
                                                                         shuffle=True, stratify=food_data['class'])
 
-    vectorized_svm(x_foodtrain.values.astype('U'), y_foodtrain.values.astype(np.float32), x_foodtest.values.astype('U'),
+    vec, model = vectorized_svm(x_foodtrain.values.astype('U'), y_foodtrain.values.astype(np.float32), x_foodtest.values.astype('U'),
                   y_foodtest.values.astype(np.float32), ngram_range=(1, 1), vector_type="count", dataset="food")
-    vectorized_svm(x_foodtrain.values.astype('U'), y_foodtrain.values.astype(np.float32), x_foodtest.values.astype('U'),
+
+    test_elec_prediction = model.predict(vec.transform(elec_test['noaspect_text'].values.astype('U')))
+    test_food_prediction = model.predict(vec.transform(food_test['noaspect_text'].values.astype('U')))
+
+    vec2, model2 = vectorized_svm(x_foodtrain.values.astype('U'), y_foodtrain.values.astype(np.float32), x_foodtest.values.astype('U'),
                   y_foodtest.values.astype(np.float32), ngram_range=(1, 1), vector_type="tfidf", dataset="food")
+
+    test_elec2_prediction = model2.predict(vec2.transform(elec_test['noaspect_text'].values.astype('U')))
+    test_food2_prediction = model2.predict(vec2.transform(food_test['noaspect_text'].values.astype('U')))
+
+    test_food_keys = food_test['example_id'].values.astype('U')
+    test_elec_keys = elec_test['example_id'].values.astype('U')
+
+    with open('./outputs/svm_vec_food_pred.txt','w') as o:
+        for i in range(len(test_food2_prediction)):
+            op_string = test_food_keys[i]+";;"+str(int(test_food2_prediction[i]))+"\n"
+            o.write(op_string)
+
+    with open('./outputs/svm_vec_elec_pred.txt','w') as o:
+        for i in range(len(test_elec2_prediction)):
+            op_string = test_elec_keys[i]+";;"+str(int(test_elec2_prediction[i]))+"\n"
+            o.write(op_string)
+
+
 
 
 
